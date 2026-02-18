@@ -9,12 +9,11 @@ import easyocr
 
 reader = easyocr.Reader(['ko','en'], gpu=False)
 
-results = reader.readtext("receipt.png")
+results = reader.readtext("processed.png")
 
 # ----------------------------
 # 4. 텍스트만 출력
 # ----------------------------
 
 for bbox, text, confidence in results:
-    if confidence > 0.3:   # confidence 필터
-        print(text)
+    print(text)
