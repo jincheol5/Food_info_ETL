@@ -1,12 +1,25 @@
-from transformers import TrOCRProcessor, VisionEncoderDecoderModel
+from transformers import pipeline
 from PIL import Image
+import torch
 
-model_name = "team-lucid/trocr-small-korean"
-processor = TrOCRProcessor.from_pretrained(model_name)
-model = VisionEncoderDecoderModel.from_pretrained(model_name)
+# GPU 사용 여부 설정
+device = 0 if torch.cuda.is_available() else -1
 
-image = Image.open("food1.png").convert("RGB")
-pixel_values = processor(image, return_tensors="pt").pixel_values
+# DeepSeek-OCR 파이프라인 생성
+pipe = pipeline(
+    "image-text-to-text",
+    model="deepseek-ai/DeepSeek-OCR",
+    trust_remote_code=True,
+    device=device
+)
 
-output_ids = model.generate(pixel_values)
-print(processor.decode(output_ids[0], skip_special_tokens=True))
+# 이미지 로드
+image_path = "sample.png"   # <-- 여기에 테스트 이미지 경로 입력
+image = Image.open(image_path).convert("RGB")
+
+# OCR 실행
+result = pipe(image)
+
+# 결과 출력
+text = result[0]["generated_text"]
+print(text)
