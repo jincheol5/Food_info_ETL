@@ -20,7 +20,17 @@ class DBInterface:
     def disconnect_db(self):
         self.client.close()
     
-    def insert_food_ids(self,food_ids:list):
+    def delete_collection(self,collection_name:str):
+        if self.client is None:
+            self.connect_db()
+        collection=self.db[collection_name]
+        try:
+            collection.delete_many({})
+            print(f"{collection_name} collection is deleted!")
+        except PyMongoError as e:
+            print(f"MongoDB delete collection error: {e}")
+
+    def insert_food(self,food_ids:list):
         if self.client is None:
             self.connect_db()
         food_info_collection=self.db["food_info"]
@@ -45,7 +55,7 @@ class DBInterface:
         except PyMongoError as e:
             print(f"MongoDB insert error: {e}")
 
-    def get_unextracted_food_ids(self):
+    def get_unextracted_food(self):
         if self.client is None:
             self.connect_db()
         food_info_collection=self.db["food_info"]
@@ -58,7 +68,7 @@ class DBInterface:
         )
         return food_ids
 
-    def update_batch_nutrition_info(self,nutrition_info_list:list):
+    def update_nutrition_info(self,nutrition_info_list:list):
         if self.client is None:
             self.connect_db()
         food_info_collection=self.db["food_info"]
