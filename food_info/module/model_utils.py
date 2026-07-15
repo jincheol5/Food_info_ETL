@@ -1,52 +1,64 @@
-from langchain_core.messages import SystemMessage,HumanMessage,AIMessage
-from .prompts import Prompts
+import base64
+import mimetypes
+from pathlib import Path
+from langchain_core.messages import HumanMessage,SystemMessage
+from schema import Prompt
+
 
 class ModelUtils:
     @staticmethod
-    def get_classifier_message(image_path:str):
-        system_msg=SystemMessage(content=Prompts.FOOD_IMG_CLASSIFIER_SYSTEM_PROMPT)
-        human_msg=HumanMessage(
-            content=[
-                {
-                    "type":"text",
-                    "text":Prompts.FOOD_IMG_CLASSIFIER_HUMAN_PROMPT
-                },
-                {
-                    "type":"image_url",
-                    "image_url":image_path
-                }
-            ]
-        )
-        classifier_message=[
-            system_msg,
-            human_msg
+    def image_to_data_url(image_path:str)->str:
+        path=Path(image_path)
+        mime_type=mimetypes.guess_type(path.name)[0] or "image/jpeg"
+        encoded=base64.b64encode(path.read_bytes()).decode("ascii")
+        return f"data:{mime_type};base64,{encoded}"
+
+    @classmethod
+    def _message(
+            cls, 
+            image_path:str, 
+            system_prompt:str, 
+            human_prompt:str
+        ):
+        return [
+            SystemMessage(content=system_prompt),
+            HumanMessage(
+                content=[
+                    {"type": "text", "text": human_prompt},
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": cls.image_to_data_url(image_path)},
+                    },
+                ]
+            ),
         ]
-        return classifier_message
+
+    @classmethod
+    def get_classifier_message(
+            cls, 
+            image_path:str
+        ):
+        return cls._message(
+            image_path,
+            Prompt.FOOD_IMG_CLASSIFIER_SYSTEM_PROMPT,
+            Prompt.FOOD_IMG_CLASSIFIER_HUMAN_PROMPT,
+        )
+
+    @classmethod
+    def get_nutrition_message(
+            cls, 
+            image_path:str
+        ):
+        return cls._message(
+            image_path,
+            Prompt.NUTRITION_SYSTEM_PROMPT,
+            Prompt.NUTRITION_HUMAN_PROMPT,
+        )
 
     @staticmethod
-    def get_nutrition_message(image_path:str):
-        system_msg=SystemMessage(content=Prompts.NUTRITION_SYSTEM_PROMPT)
-        human_msg=HumanMessage(
-            content=[
-                {
-                    "type":"text",
-                    "text":Prompts.NUTRITION_HUMAN_PROMPT
-                },
-                {
-                    "type":"image_url",
-                    "image_url":image_path
-                }
-            ]
-        )
-        nutrition_message=[
-            system_msg,
-            human_msg
-        ]
-        return nutrition_message
-
-    @staticmethod
-    def check_classifier_output(response:AIMessage):
-        output=str(response.content).strip()
-        if output not in {"0","1","2"}:
-            raise ValueError(f"Invalid output: {output}")
-        return output
+    def parse_classifier_output(message)->bool:
+        content=message.content if hasattr(message,"content") else str(message)
+        value=str(content).strip()
+        if value not in {"0","1"}:
+            raise ValueError(f"Classifier must return 0 or 1, got {value!r}")
+        return value=="1"
