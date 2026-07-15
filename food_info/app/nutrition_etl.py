@@ -2,7 +2,7 @@ import argparse
 from pydantic import ValidationError
 from langchain_ollama import ChatOllama
 from langchain_core.runnables import RunnableLambda
-from modules import DataUtils,ModelUtils,NutritionSchema
+from food_info.module import DataUtils,ModelUtils,NutritionSchema
 
 def nutrition_ETL(**kwargs):
     """

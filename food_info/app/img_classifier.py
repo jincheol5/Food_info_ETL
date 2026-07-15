@@ -1,7 +1,7 @@
 import argparse
 from langchain_core.runnables import RunnableLambda
 from langchain_ollama import ChatOllama
-from modules import DataUtils,ModelUtils
+from food_info.module import DataUtils,ModelUtils
 
 def img_classifier(**kwargs):
     """

@@ -1,4 +1,4 @@
-from modules import DataUtils,DBInterface,FoodInfoChain
+from food_info.module import DataUtils,DBInterface,FoodInfoChain
 from pydantic import ValidationError
 
 ### 식품 영양성분 이미지 목록 가져와서 MongoDB에 초기 저장
