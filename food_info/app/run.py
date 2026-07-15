@@ -1,23 +1,15 @@
 import argparse
-from pathlib import Path
-from typing import Optional
 from module import FoodInfoChain,DBInterface
 from schema import NutritionSchema
 from utils import DataUtils
 
-
-def run_workflow(
-        model_name:str="gemma4",
-        ollama_port:int=11434,
-        db_port:int=27017
-    ):
+def run_app(**kwargs):
     """
     Process DB documents that have not yet received nutrition data.
     """
-
-    classifier=FoodInfoChain.get_food_img_classify_chain(model_name, ollama_port)
-    extractor=FoodInfoChain.get_nutrition_extract_chain(model_name, ollama_port)
-    db=DBInterface(port=db_port)
+    classifier=FoodInfoChain.get_food_img_classify_chain(kwargs["model_name"],kwargs["ollama_port"])
+    extractor=FoodInfoChain.get_nutrition_extract_chain(kwargs["model_name"],kwargs["ollama_port"])
+    db=DBInterface(port=kwargs["db_port"])
 
     try:
         food_ids=db.get_unextracted_food()
@@ -41,16 +33,15 @@ def run_workflow(
     finally:
         db.disconnect_db()
 
-
-def main() -> None:
-    parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--model-name", default="gemma4")
-    parser.add_argument("--ollama-port", type=int, default=11434)
-    parser.add_argument("--db-port", type=int, default=27017)
-    parser.add_argument("--dataset-path")
+if __name__=="__main__":
+    parser=argparse.ArgumentParser()
+    parser.add_argument("--model_name",type=str,default="gemma4:latest")
+    parser.add_argument("--ollama_port",type=int,default=11434)
+    parser.add_argument("--db_port",type=int,default=27017)
     args=parser.parse_args()
-    run_workflow(args.model_name, args.ollama_port, args.db_port, args.dataset_path)
-
-
-if __name__ == "__main__":
-    main()
+    app_config={
+        "model_name":args.model_name,
+        "ollama_port":args.ollama_port,
+        "db_port":args.db_port
+    }
+    run_app(**app_config)
